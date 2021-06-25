@@ -2,6 +2,7 @@ import {createClient} from 'contentful'
 import Image from 'next/image'
 import {documentToReactComponents} from '@contentful/rich-text-react-renderer';
 import Skeleton from 'components/Skelaton';
+import React, {useState} from 'react'
 
 const client = createClient({
   space: process.env.CONTENTFUL_SPACE_ID,
@@ -51,8 +52,13 @@ export const getStaticProps = async (context) => {
 
 export default function RecipeDetails({recipe}) {
   if (!recipe) return <Skeleton />;
+  const [toggle, setToggle] = useState(true);
 
   const {featuredImage, title, cookingTime, ingredients, method} = recipe.fields;
+
+  const handleShowMethod = () => {
+    setToggle(!toggle)
+  };
 
   return (
     <div>
@@ -77,10 +83,13 @@ export default function RecipeDetails({recipe}) {
         })}
       </div>
 
-      <div className='method'>
-        <h3>Method: </h3>
-        <div>{documentToReactComponents(method)}</div>
-      </div>
+      <button onClick={handleShowMethod}>Show method</button>
+      {toggle && (
+        <div className='method'>
+          <h3>Method: </h3>
+          <div>{documentToReactComponents(method)}</div>
+        </div>
+      )}
 
       <style jsx>{`
         h2,h3 {
