@@ -3,6 +3,43 @@ import Image from 'next/image'
 import {documentToReactComponents} from '@contentful/rich-text-react-renderer';
 import Skeleton from 'components/Skelaton';
 
+const client = createClient({
+  space: process.env.CONTENTFUL_SPACE_ID,
+  accessToken: process.env.CONTENTFUL_ACCESS_KEY
+});
+
+export const getStaticPaths = async () => {
+
+  const res = await client.getEntries({content_type: 'recipe'});
+
+  const paths= res.items.map((item) => ({
+    params: {
+      slug: item.fields.slug
+    }
+  }));
+
+  return {
+    paths: paths,
+    fallback: true
+  };
+};
+
+export const getStaticProps = async (context) => {
+  const {slug} = context.params;
+
+  const {items} = await client.getEntries({
+    content_type: 'recipe',
+    'fields.slug': slug
+  });
+
+  return {
+    props: {
+      recipe: items[0],
+    },
+    revalidate: 1
+  }
+};
+
 export default function RecipeDetails({recipe}) {
   if (!recipe) return <Skeleton />;
 
@@ -64,40 +101,3 @@ export default function RecipeDetails({recipe}) {
     </div>
   )
 }
-
-const client = createClient({
-  space: process.env.CONTENTFUL_SPACE_ID,
-  accessToken: process.env.CONTENTFUL_ACCESS_KEY
-});
-
-export const getStaticPaths = async () => {
-
-  const res = await client.getEntries({content_type: 'recipe'});
-
-  const paths= res.items.map((item) => ({
-    params: {
-      slug: item.fields.slug
-    }
-  }));
-
-  return {
-    paths: paths,
-    fallback: true
-  };
-};
-
-export const getStaticProps = async (context) => {
-  const {slug} = context.params;
-
-  const {items} = await client.getEntries({
-    content_type: 'recipe',
-    'fields.slug': slug
-  });
-
-  return {
-    props: {
-      recipe: items[0],
-      revalidate: 1
-    }
-  }
-};
